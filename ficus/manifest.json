@@ -7,12 +7,12 @@
   "start_url": "./app.html",
   "icons": [
     {
-      "src": "icons/ficus/512.png",
+      "src": "ficus/icons/512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "icons/ficus/192.png",
+      "src": "ficus/icons/192.png",
       "type": "image/png",
       "sizes": "192x19"
     }

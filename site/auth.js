@@ -97,14 +97,24 @@ export class AuthWrapper extends React.Component {
       username: document.getElementById("username").value || "",
       password: document.getElementById("password").value
     };
-    const response = await fetch(`${wapi.base_url()}/account/log_in`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(req)
-    });
-    let auth = await response.json();
+    let auth;
+
+    try {
+      const response = await fetch(`${wapi.base_url()}/account/log_in`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(req)
+      });
+      auth = await response.json();
+    } catch (err) {
+      console.error("Error parsing authentication response:", err);
+      this.setState({
+        auth_state: "unauthenticated"
+      });
+      return;
+    }
 
     if (auth.token) {
       window.localStorage.setItem("auth_data", JSON.stringify(auth));
