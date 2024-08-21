@@ -1,0 +1,20 @@
+{
+  "name": "Ficus",
+  "description": "An app to help manage your spending",
+  "categories": ["finance"],
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "./app.html",
+  "icons": [
+    {
+      "src": "icons/ficus/512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icons/ficus/192.png",
+      "type": "image/png",
+      "sizes": "192x19"
+    }
+  ]
+}

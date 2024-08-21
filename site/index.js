@@ -1,7 +1,7 @@
 "use strict";
 
 import { AuthWrapper } from "./auth.js";
-import * as ficus from "./ficus.js";
+import * as ficus from "./ficus/ficus.js";
 
 function TransactionBox(props) {
   const [transaction, setTransaction] = React.useState(props.transaction);

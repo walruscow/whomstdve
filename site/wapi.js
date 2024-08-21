@@ -4,7 +4,13 @@ export default function WAPI() {
   return WAPIClass.get();
 }
 export function base_url() {
-  return window.location.origin.startsWith("https://localho.st:") ? "https://localho.st:6000" : "https://api.wmcd.dev";
+  if (window.location.origin.startsWith("https://localho.st:")) {
+    return "https://localho.st:60000";
+  } else if (window.location.origin.startsWith("https://192.168.")) {
+    return window.location.origin.replace(/:\d+$/, ":60000");
+  } else {
+    return "https://api.wmcd.dev";
+  }
 }
 export function init(auth_data) {
   return WAPIClass.init(auth_data);
