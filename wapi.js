@@ -4,10 +4,12 @@ export default function WAPI() {
   return WAPIClass.get();
 }
 export function base_url() {
-  if (window.location.origin.startsWith("https://localho.st:")) {
-    return "https://localho.st:60000";
-  } else if (window.location.origin.startsWith("https://192.168.")) {
+  if (/^https:\/\/(192\.168\.|localhost)/.test(window.location.origin)) {
+    // https
     return window.location.origin.replace(/:\d+$/, ":60000");
+  } else if (/^http:\/\/(192\.168\.|localhost)/.test(window.location.origin)) {
+    // http
+    return window.location.origin.replace(/:\d+$/, ":60010");
   } else {
     return "https://api.wmcd.dev";
   }

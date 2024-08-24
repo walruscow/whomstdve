@@ -74,18 +74,20 @@ export class AuthWrapper extends React.Component {
       case "unauthenticated":
         return /*#__PURE__*/React.createElement("div", {
           id: "auth_container"
+        }, /*#__PURE__*/React.createElement("form", {
+          onSubmit: e => {
+            e.preventDefault();
+
+            this._do_auth();
+          }
         }, /*#__PURE__*/React.createElement("input", {
-          type: "text",
-          id: "username",
-          name: "username"
-        }), /*#__PURE__*/React.createElement("input", {
           type: "password",
           id: "password",
           name: "password"
-        }), /*#__PURE__*/React.createElement("button", {
-          id: "auth_button",
-          onClick: () => this._do_auth()
-        }, "Log In"));
+        }), /*#__PURE__*/React.createElement("input", {
+          type: "submit",
+          value: "Log In"
+        })));
     }
   }
 
@@ -94,7 +96,6 @@ export class AuthWrapper extends React.Component {
       auth_state: "pending"
     });
     const req = {
-      username: document.getElementById("username").value || "",
       password: document.getElementById("password").value
     };
     let auth;

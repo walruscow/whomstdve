@@ -1,7 +1,7 @@
 "use strict";
 
 import { AuthWrapper } from "../auth.js";
-import * as ficus from "./ficus.js";
+import Ficus from "./ficus.js"; // Import the functions you need from the SDKs you need
 
 class TxnBudgeter extends React.Component {
   constructor(props) {
@@ -56,7 +56,7 @@ class NewBudget extends React.Component {
       onSubmit: async e => {
         e.preventDefault();
         const form = Object.fromEntries(new FormData(e.target));
-        let new_budget = await ficus.new_budget({
+        let new_budget = await Ficus.new_budget({
           name: form.budget_name,
           target_spend: parseInt(form.target_spend, 10),
           duration: form.duration,
@@ -118,7 +118,7 @@ class Budgeter extends React.Component {
       transaction: this.props.transactions[this.state.active_txn_idx],
       budgets: this.state.budgets,
       on_budgeted: (txn, budget) => {
-        ficus.set_txn_budget(txn, budget);
+        Ficus.set_txn_budget(txn, budget);
         this.setState(prevState => {
           // check if the budget is a new one
           const budgets = [...prevState.budgets];
@@ -152,14 +152,23 @@ class FicusApp extends React.Component {
 
   async get_transactions() {
     this.setState({
-      transactions: await ficus.get_unbudgeted_transactions()
+      transactions: await Ficus.get_unbudgeted_transactions()
     });
   }
 
   async get_budgets() {
     this.setState({
-      budgets: await ficus.get_budgets()
+      budgets: await Ficus.get_budgets()
     });
+  }
+
+  async subscribe() {
+    await fetch("/fuck/me"); // const t = await Ficus.fire_msg.getToken(Ficus.f_msg, {
+    //   serviceWorkerRegistration: await get_sw(),
+    //   vapidKey:
+    //     "BM_z9ww1GXhxhUcd6htnKZVaSnjn7aGS6VaHOavVbVECr5nH9El9zHf5fnO1yrjCoLdmJhJy9yt2SpoGZA1osFQ",
+    // });
+    // console.log(`Got token ${t}`);
   }
 
   render() {
@@ -167,7 +176,9 @@ class FicusApp extends React.Component {
       return /*#__PURE__*/React.createElement("div", null, "Waiting");
     }
 
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Budgeter, {
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+      onClick: () => this.subscribe()
+    }, "Subscribe")), /*#__PURE__*/React.createElement(Budgeter, {
       transactions: this.state.transactions,
       budgets: this.state.budgets,
       on_new_budget: () => this.get_budgets()
@@ -176,6 +187,40 @@ class FicusApp extends React.Component {
 
 }
 
+async function register_sw() {
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/"
+    });
+
+    if (registration.installing) {
+      console.log("Service worker installing");
+    } else if (registration.waiting) {
+      console.log("Service worker installed");
+    } else if (registration.active) {
+      console.log("Service worker active");
+    }
+
+    return registration;
+  } catch (err) {
+    console.error(`Service worker registration failed with ${err}`);
+    return null;
+  }
+}
+
+let sw_registration = null;
+let sw_prom = register_sw();
+
+async function get_sw() {
+  if (sw_registration == null) {
+    sw_registration = await sw_prom;
+  }
+
+  console.log(`got ${sw_registration}`);
+  return sw_registration;
+}
+
+get_sw();
 const domContainer = document.querySelector("#root");
 const root = ReactDOM.createRoot(domContainer);
 root.render( /*#__PURE__*/React.createElement(AuthWrapper, {
