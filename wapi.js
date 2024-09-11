@@ -44,7 +44,7 @@ class WAPIClass {
 
   async refresh_auth() {
     try {
-      const response = await this.post("account/refresh_session");
+      const response = await this.post("account/session/refresh");
       const auth = await response.json();
       this.auth_data = auth;
       return auth;

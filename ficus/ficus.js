@@ -1,22 +1,9 @@
 "use strict";
 
-import WAPI from "../wapi.js"; // import * as fire_app from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-// import * as fire_msg from "https://www.gstatic.com/firebasejs/10.13/firebase-messaging.js";
+import { AuthWrapper } from "../auth.js";
+import WAPI from "../wapi.js";
 
 class FicusClass {
-  constructor() {// this.fire_app = fire_app;
-    // this.fire_msg = fire_msg;
-    // this.f_app = this.fire_app.initializeApp({
-    //   apiKey: "AIzaSyAv8QaZaRjJ6HRHX7ymQWoUalNYx2lSRUA",
-    //   authDomain: "wmcd-site.firebaseapp.com",
-    //   projectId: "wmcd-site",
-    //   storageBucket: "wmcd-site.appspot.com",
-    //   messagingSenderId: "853912113754",
-    //   appId: "1:853912113754:web:14aa98bbd15ceab7aa3e63",
-    // });
-    // this.f_msg = this.fire_msg.getMessaging(this.f_app);
-  }
-
   async get_transactions() {
     const end_ts = Math.ceil(Date.now() / 1000);
     const start_ts = end_ts - 86400 * 7;
@@ -64,7 +51,65 @@ class FicusClass {
     return await response.json();
   }
 
+  async get_subscription_meta() {
+    let response = await WAPI().get("ficus/subscribe/meta");
+    let json = await response.json();
+    json.vapid_key = new Uint8Array(json.vapid_key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    return json;
+  }
+
+  async subscribe(sub) {
+    let response = await WAPI().post("ficus/subscribe", sub);
+    let json = await response.json();
+    console.log(`Subscribing and got response ${JSON.stringify(json)}`);
+    return json.ok;
+  }
+
+  async test_notif() {
+    let response = await WAPI().post("ficus/notify_me");
+    let json = await response.json();
+    console.log(`Got notify_me response ${JSON.stringify(json)}`);
+  }
+
 }
 
 const Ficus = new FicusClass();
 export default Ficus;
+
+let sw_prom = async function () {
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/"
+    });
+
+    if (registration.installing) {
+      console.log("Service worker installing");
+    } else if (registration.waiting) {
+      console.log("Service worker installed");
+    } else if (registration.active) {
+      console.log("Service worker active");
+    }
+
+    return registration;
+  } catch (err) {
+    console.error(`Service worker registration failed with ${err}`);
+    return null;
+  }
+}();
+
+let sw_registration = null;
+export async function sw() {
+  if (sw_registration == null) {
+    sw_registration = await sw_prom;
+    console.log(`got ${sw_registration}`);
+  }
+
+  return sw_registration;
+}
+export function render(make_app) {
+  const domContainer = document.querySelector("#root");
+  const root = ReactDOM.createRoot(domContainer);
+  root.render( /*#__PURE__*/React.createElement(AuthWrapper, {
+    inner_content: make_app
+  }));
+}

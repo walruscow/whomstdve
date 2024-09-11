@@ -1,39 +1,38 @@
-// importScripts(
-//   "https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js",
-// );
-// importScripts(
-//   "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js",
-// );
-// const f_app = initializeApp({
-//   apiKey: "AIzaSyAv8QaZaRjJ6HRHX7ymQWoUalNYx2lSRUA",
-//   authDomain: "wmcd-site.firebaseapp.com",
-//   projectId: "wmcd-site",
-//   storageBucket: "wmcd-site.appspot.com",
-//   messagingSenderId: "853912113754",
-//   appId: "1:853912113754:web:14aa98bbd15ceab7aa3e63",
-// });
-// const f_msg = getMessaging(f_app);
-// onMessage(f_msg, (payload) => {
-//   console.log(`onMessage: ${payload}`);
-// });
-// onBackgroundMessage(f_msg, (payload) => {
-//   console.log(`onMessage: ${payload}`);
-// });
+const VERSION = 1;
 self.addEventListener("install", event => {
-  console.log("service worker installing...");
+  console.log("service worker installing..."); // TODO: Enumerate all the assets that the app needs to function offline
+  // TODO: Also figure out how to cache transactions and other app data
+  // like budgets
+
   event.waitUntil(caches.open("static-v1").then(cache => cache.add("/ficus/icons/192.png")));
 });
 self.addEventListener("activate", event => {
   console.log("V1 now ready to handle fetches!");
 });
+self.addEventListener("push", event => {
+  console.log("Push message received:", event);
+  const title = "New Push Notification";
+  const options = {
+    body: event.data ? event.data.text() : "No payload",
+    icon: "/ficus/icons/192.png",
+    badge: "/ficus/icons/192.png"
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   console.log(`intercepting request for ${event.request.url}`);
 
-  if (url.pathname.includes("fuck")) {
-    console.log("how does this work");
-    event.respondWith(new Response("ok bro", {
-      status: 200
+  if (url.pathname == "/swtest") {
+    console.log(`sw is alive and well, version ${VERSION}`);
+    event.respondWith(new Response(JSON.stringify({
+      ok: "true",
+      version: VERSION
+    }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json"
+      }
     }));
     return;
   }
@@ -49,4 +48,3 @@ self.addEventListener("fetch", event => {
     }
   })());
 });
-console.log("service worker hello ffs");

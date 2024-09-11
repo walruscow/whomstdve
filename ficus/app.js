@@ -1,7 +1,6 @@
 "use strict";
 
-import { AuthWrapper } from "../auth.js";
-import Ficus from "./ficus.js"; // Import the functions you need from the SDKs you need
+import Ficus, { render, sw } from "./ficus.js"; // Import the functions you need from the SDKs you need
 
 class TxnBudgeter extends React.Component {
   constructor(props) {
@@ -163,12 +162,46 @@ class FicusApp extends React.Component {
   }
 
   async subscribe() {
-    await fetch("/fuck/me"); // const t = await Ficus.fire_msg.getToken(Ficus.f_msg, {
-    //   serviceWorkerRegistration: await get_sw(),
-    //   vapidKey:
-    //     "BM_z9ww1GXhxhUcd6htnKZVaSnjn7aGS6VaHOavVbVECr5nH9El9zHf5fnO1yrjCoLdmJhJy9yt2SpoGZA1osFQ",
-    // });
-    // console.log(`Got token ${t}`);
+    console.log(await (await fetch("/swtest")).json());
+    let result = await Notification.requestPermission();
+
+    if (result === "granted") {
+      console.log("Got notification permission");
+    }
+
+    const s = await sw();
+    let sub = await s.pushManager.getSubscription();
+
+    if (true || sub == null) {
+      // no subscription yet, make a new one
+      console.log("Seeking a new subscription"); // Get the server's public key
+
+      const sub_info = await Ficus.get_subscription_meta();
+      console.log(`Got public key ${sub_info.vapid_key}`); // const vapid_key = new Uint8Array(65).fill(4);
+
+      console.log(sub_info.vapid_key);
+      sub = await s.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: sub_info.vapid_key
+      });
+      const serializedSub = JSON.stringify(sub);
+      sub = JSON.parse(serializedSub); // console.log(sub);
+      // debugger;
+
+      let success = await Ficus.subscribe({
+        endpoint: sub.endpoint,
+        auth: sub.keys.auth,
+        p256dh: sub.keys.p256dh
+      });
+      console.log(`Subscribe success? ${success}`);
+    }
+
+    console.log(`Got subscription ${JSON.stringify(sub)}`);
+  }
+
+  async test_notif() {
+    console.log("Testing notification!");
+    Ficus.test_notif();
   }
 
   render() {
@@ -178,7 +211,9 @@ class FicusApp extends React.Component {
 
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
       onClick: () => this.subscribe()
-    }, "Subscribe")), /*#__PURE__*/React.createElement(Budgeter, {
+    }, "Subscribe"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => this.test_notif()
+    }, "Test Notif")), /*#__PURE__*/React.createElement(Budgeter, {
       transactions: this.state.transactions,
       budgets: this.state.budgets,
       on_new_budget: () => this.get_budgets()
@@ -187,42 +222,4 @@ class FicusApp extends React.Component {
 
 }
 
-async function register_sw() {
-  try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/"
-    });
-
-    if (registration.installing) {
-      console.log("Service worker installing");
-    } else if (registration.waiting) {
-      console.log("Service worker installed");
-    } else if (registration.active) {
-      console.log("Service worker active");
-    }
-
-    return registration;
-  } catch (err) {
-    console.error(`Service worker registration failed with ${err}`);
-    return null;
-  }
-}
-
-let sw_registration = null;
-let sw_prom = register_sw();
-
-async function get_sw() {
-  if (sw_registration == null) {
-    sw_registration = await sw_prom;
-  }
-
-  console.log(`got ${sw_registration}`);
-  return sw_registration;
-}
-
-get_sw();
-const domContainer = document.querySelector("#root");
-const root = ReactDOM.createRoot(domContainer);
-root.render( /*#__PURE__*/React.createElement(AuthWrapper, {
-  inner_content: () => /*#__PURE__*/React.createElement(FicusApp, null)
-}));
+render(() => /*#__PURE__*/React.createElement(FicusApp, null));

@@ -7,73 +7,70 @@
         <link rel="icon" href="icons/favicon.ico" type="image/x-icon" />
     </head>
     <body>
-        <article id="hello">
-            <head>
-                <h1>William, Software Engineer</h1>
-            </head>
-            <p>
-                I enjoy systems and infrastructure, and I've been happy
-                to work directly on some of the largest scale systems on earth.
-            </p>
-            <p>
-                I recently worked at <em className="discord">Discord</em> on
-                media infrastructure, where I helped grow the team while
-                reducing storage costs, slowing the spread of malware across the
-                internet, responding to gif encoding ddos attacks, and
-                modernizing legacy infra.
-            </p>
-            <p>
-                Prior to that, I worked at <em className="meta">Meta</em> for 6+
-                years in video and ads infrastructure. Some of the most interesting projects included
-                <ul>
-                    <li>scaling a timeseries database >10x</li>
-                    <li>
-                        parallelizing video encoding (both live and vod) to be much faster for
-                        <a
-                            href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/"
-                        >
-                            av1
-                        </a> and vp9
-                    </li>
-                    <li>
-                        writing a <i>very fast</i> mp4 muxer / sanitizer
-                    </li>
-                    <li>
-                        and integrating
-                        <a
-                            href="https://ai.meta.com/blog/meta-scalable-video-processor-MSVP/"
-                        >
-                            custom ASIC video encoding chips
-                        </a>
-                        into Meta's infrastructure
-                    </li>
-                </ul>
-            </p>
-            <p>
-                I studied math and CS at the university of Waterloo, where I was in the co-op program.
-                It led me to 6 jobs throughout my degree, on almost every layer
-                in the stack: Lua, Python, JS, C++, Android and PHP/Hack.
-            </p>
-            <p>
-                I'll put my <em className="resume">resume</em> up here soon. Alternatively, check out:
-                <ul>
-                    <li>
-                        <a className="github" href="https://github.com/walruscow">
-                            GitHub
-                        </a>
-                    </li>
-                    <li>
-                        <a className="linkedin" href="https://www.linkedin.com/in/william-mcdonald-a06b10ba/">
-                            LinkedIn
-                        </a>
-                    </li>
-                    <li>
-                        <a className="wmcd" href="/">
-                            Website
-                        </a>
-                    </li>
-                </ul>
-            </p>
-        </article>
+        <div id="root-wrapper">
+        <div id="root">
+            <article id="hello">
+                <head>
+                    <h1>William, Software Engineer</h1>
+                </head>
+                <p>
+                    I enjoy systems and infrastructure, and I've been happy
+                    to work directly on some of the largest scale systems on earth.
+                </p>
+                <p>
+                    I recently worked at <em class="discord">Discord</em> on
+                    media infrastructure, where I helped grow the team while
+                    reducing storage costs, slowing the spread of malware across the
+                    internet, responding to gif encoding ddos attacks, and
+                    modernizing legacy infra.
+                </p>
+                <p>
+                    Prior to that, I worked at <em class="meta">Meta</em> for 6+
+                    years in video and ads infrastructure. Some of the most interesting projects included
+                    <ul>
+                        <li>scaling a timeseries database >10x</li>
+                        <li>
+                            parallelizing video encoding (both live and vod) to be much faster for
+                            <a href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/" >av1</a> and vp9
+                        </li>
+                        <li>
+                            writing a <i>very fast</i> mp4 muxer and sanitizer in C++
+                        </li>
+                        <li>
+                            integrating
+                            <a href="https://ai.meta.com/blog/meta-scalable-video-processor-MSVP/">
+                                custom ASIC video encoding chips</a>
+                            into Meta's infrastructure
+                        </li>
+                    </ul>
+                </p>
+                <p>
+                    I studied math and CS at the university of Waterloo, where I was in the co-op program.
+                    It led me to 6 jobs throughout my degree, on almost every layer
+                    in the stack: Lua, Python, JS, C++, Android and PHP/Hack.
+                </p>
+                <p>
+                    I'll put my <em class="resume">resume</em> up here soon. Alternatively, check out:
+                    <ul>
+                        <li>
+                            <a class="github" href="https://github.com/walruscow">
+                                GitHub
+                            </a>
+                        </li>
+                        <li>
+                            <a class="linkedin" href="https://www.linkedin.com/in/william-mcdonald-a06b10ba/">
+                                LinkedIn
+                            </a>
+                        </li>
+                        <li>
+                            <a class="wmcd" href="/">
+                                Website
+                            </a>
+                        </li>
+                    </ul>
+                </p>
+            </article>
+        </div>
+        </div>
     </body>
 </html>
