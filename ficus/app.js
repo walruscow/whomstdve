@@ -191,7 +191,8 @@ class FicusApp extends React.Component {
       let success = await Ficus.subscribe({
         endpoint: sub.endpoint,
         auth: sub.keys.auth,
-        p256dh: sub.keys.p256dh
+        p256dh: sub.keys.p256dh,
+        expiration_time: sub.expirationTime
       });
       console.log(`Subscribe success? ${success}`);
     }
