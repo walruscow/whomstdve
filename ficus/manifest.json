@@ -4,7 +4,7 @@
   "categories": ["finance"],
   "display": "standalone",
   "orientation": "portrait",
-  "start_url": "./app.html",
+  "start_url": "/ficus/",
   "icons": [
     {
       "src": "/ficus/icons/512.png",
