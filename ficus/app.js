@@ -172,7 +172,7 @@ class FicusApp extends React.Component {
     const s = await sw();
     let sub = await s.pushManager.getSubscription();
 
-    if (true || sub == null) {
+    if (sub == null) {
       // no subscription yet, make a new one
       console.log("Seeking a new subscription"); // Get the server's public key
 
