@@ -1,226 +1,214 @@
 "use strict";
 
-import Ficus, { render, sw } from "./ficus.js"; // Import the functions you need from the SDKs you need
+import Ficus, { sw } from "./ficus.js";
+import { AuthWrapper } from "../auth.js";
+import ReviewPage from "./review.js";
+import AccountPage from "./account.js";
+import HistoryPage from "./history.js";
+import OverviewPage from "./overview.js";
 
-class TxnBudgeter extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
-      className: "orange"
-    }, "Cents: ", this.props.transaction.cents), /*#__PURE__*/React.createElement("h1", {
-      className: "purple"
-    }, "Description: ", this.props.transaction.description), /*#__PURE__*/React.createElement("div", {
-      className: "budget_chooser"
-    }, this.props.budgets.map(budget => /*#__PURE__*/React.createElement("button", {
-      className: "budget_choice",
-      onClick: () => this.props.on_budgeted(this.props.transaction, budget)
-    }, budget.name)), /*#__PURE__*/React.createElement(NewBudget, {
-      on_create: budget => this.props.on_budgeted(this.props.transaction, budget),
-      txn: this.props.transaction
-    })));
-  }
-
-}
-
-class NewBudget extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      expanded: false
-    };
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.txn.id != this.props.txn.id) {
-      this.setState({
-        expanded: false
-      });
-    }
-  }
-
-  render() {
-    if (!this.state.expanded) {
-      return /*#__PURE__*/React.createElement("button", {
-        className: "budget_choice",
-        onClick: () => this.setState({
-          expanded: true
-        })
-      }, "New Budget");
-    }
-
-    return /*#__PURE__*/React.createElement("form", {
-      onSubmit: async e => {
-        e.preventDefault();
-        const form = Object.fromEntries(new FormData(e.target));
-        let new_budget = await Ficus.new_budget({
-          name: form.budget_name,
-          target_spend: parseInt(form.target_spend, 10),
-          duration: form.duration,
-          rollover_policy: form.rollover_policy
-        });
-        this.props.on_create(new_budget);
-      },
-      className: "new_budget_form"
-    }, /*#__PURE__*/React.createElement("input", {
-      type: "text",
-      name: "budget_name",
-      placeholder: "Budget Name",
-      className: "budget_name_input"
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "budget_frequency"
-    }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
-      type: "radio",
-      name: "duration",
-      value: "weekly"
-    }), " Weekly"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
-      type: "radio",
-      name: "duration",
-      value: "monthly"
-    }), " Monthly"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
-      type: "radio",
-      name: "duration",
-      value: "yearly"
-    }), " Yearly")), /*#__PURE__*/React.createElement("input", {
-      type: "number",
-      name: "target_spend",
-      placeholder: "Target Spend",
-      className: "target_spend_input"
-    }), /*#__PURE__*/React.createElement("button", {
-      type: "submit"
-    }, "Create Budget"));
-  }
-
-}
-
-class Budgeter extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      active_txn_idx: 0,
-      budgets: props.budgets
-    };
-  }
-
-  render() {
-    if (this.state.active_txn_idx >= this.props.transactions.length) {
-      return /*#__PURE__*/React.createElement("div", {
-        className: "budgeter"
-      }, /*#__PURE__*/React.createElement("h1", null, "All done!"));
-    }
-
-    return /*#__PURE__*/React.createElement("div", {
-      className: "budgeter"
-    }, /*#__PURE__*/React.createElement(TxnBudgeter, {
-      transaction: this.props.transactions[this.state.active_txn_idx],
-      budgets: this.state.budgets,
-      on_budgeted: (txn, budget) => {
-        Ficus.set_txn_budget(txn, budget);
-        this.setState(prevState => {
-          // check if the budget is a new one
-          const budgets = [...prevState.budgets];
-
-          if (!prevState.budgets.some(b => b.id === budget.id)) {
-            budgets.push(budget);
-          }
-
-          return {
-            budgets: budgets,
-            active_txn_idx: this.state.active_txn_idx + 1
-          };
-        });
-        this.props.on_new_budget(budget);
-      }
-    }));
-  }
-
+function render(make_app) {
+  const domContainer = document.querySelector("#ficus");
+  const root = ReactDOM.createRoot(domContainer);
+  root.render( /*#__PURE__*/React.createElement(AuthWrapper, {
+    inner_content: make_app
+  }));
 }
 
 class FicusApp extends React.Component {
+  static DEFAULT_PAGE = "review";
+  static PAGES = {
+    account: () => /*#__PURE__*/React.createElement(AccountPage, null),
+    review: () => /*#__PURE__*/React.createElement(ReviewPage, null),
+    history: () => /*#__PURE__*/React.createElement(HistoryPage, null),
+    overview: () => /*#__PURE__*/React.createElement(OverviewPage, null)
+  };
+
   constructor(props) {
     super(props);
     this.state = {
-      transactions: null,
-      budgets: null
+      current_page: FicusApp.DEFAULT_PAGE,
+      notifications_state: "unknown"
     };
-    this.get_transactions();
-    this.get_budgets();
+    this.check_notifications();
   }
 
-  async get_transactions() {
-    this.setState({
-      transactions: await Ficus.get_unbudgeted_transactions()
-    });
-  }
+  async check_notifications() {
+    let permission_state = Notification.permission;
+    console.debug(`Notification permission: ${permission_state}`);
 
-  async get_budgets() {
-    this.setState({
-      budgets: await Ficus.get_budgets()
-    });
-  }
+    switch (permission_state) {
+      case "granted":
+        // great, check if subscription is active
+        break;
 
-  async subscribe() {
-    console.log(await (await fetch("/swtest")).json());
-    let result = await Notification.requestPermission();
+      case "denied":
+        this.setState({
+          notifications_state: "denied"
+        });
+        return;
 
-    if (result === "granted") {
-      console.log("Got notification permission");
+      case "default":
+        this.setState({
+          notifications_state: "not_granted"
+        });
+        return;
     }
 
     const s = await sw();
     let sub = await s.pushManager.getSubscription();
 
     if (sub == null) {
-      // no subscription yet, make a new one
-      console.log("Seeking a new subscription"); // Get the server's public key
-
-      const sub_info = await Ficus.get_subscription_meta();
-      console.log(`Got public key ${sub_info.vapid_key}`); // const vapid_key = new Uint8Array(65).fill(4);
-
-      console.log(sub_info.vapid_key);
-      sub = await s.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: sub_info.vapid_key
+      this.setState({
+        notifications_state: "not_subscribed"
       });
-      const serializedSub = JSON.stringify(sub);
-      sub = JSON.parse(serializedSub); // console.log(sub);
-      // debugger;
+    } else {
+      this.setState({
+        notifications_state: "unconfirmed"
+      });
+      this.confirm_notification_subscription(sub);
+    }
+  }
 
+  async confirm_notification_subscription(sub) {
+    try {
+      // lol this is the easiest way to get what we need
+      sub = JSON.parse(JSON.stringify(sub));
       let success = await Ficus.subscribe({
         endpoint: sub.endpoint,
         auth: sub.keys.auth,
         p256dh: sub.keys.p256dh,
         expiration_time: sub.expirationTime
       });
-      console.log(`Subscribe success? ${success}`);
+      this.setState({
+        notifications_state: success ? "confirmed" : "not_subscribed"
+      });
+      console.debug(`Subscribe success? ${success}`);
+    } catch (error) {
+      console.error("Error confirming notification subscription:", error);
+      this.setState({
+        notifications_state: "not_subscribed"
+      });
     }
-
-    console.log(`Got subscription ${JSON.stringify(sub)}`);
   }
 
-  async test_notif() {
-    console.log("Testing notification!");
-    Ficus.test_notif();
+  async enable_notifications() {
+    this.setState({
+      notifications_state: "pending"
+    }); // kick off network request asap
+
+    const sub_info = Ficus.get_subscription_meta();
+    let permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      this.setState({
+        notifications_state: "denied"
+      });
+      return;
+    }
+
+    const s = await sw();
+    let sub = await s.pushManager.getSubscription();
+
+    if (sub == null) {
+      // no subscription yet
+      console.debug("Seeking a new subscription");
+      sub = await s.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: (await sub_info).vapid_key
+      });
+    }
+
+    await this.confirm_notification_subscription(sub);
+  }
+
+  changePage(page) {
+    this.setState({
+      current_page: page
+    });
+    window.location.hash = `/${page}`;
+  }
+
+  componentDidMount() {
+    window.addEventListener("hashchange", () => this.handleHashChange());
+    this.handleHashChange(); // Set initial page based on URL
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("hashchange", () => this.handleHashChange());
+  }
+
+  handleHashChange() {
+    const hash = window.location.hash.slice(2); // Remove '#/' from the beginning
+
+    if (FicusApp.PAGES[hash]) {
+      this.setState({
+        current_page: hash
+      });
+    } else {
+      // If invalid hash, set to default page
+      this.setState({
+        current_page: FicusApp.DEFAULT_PAGE
+      });
+      window.location.hash = `/${FicusApp.DEFAULT_PAGE}`;
+    }
   }
 
   render() {
-    if (this.state.transactions == null || this.state.budgets == null) {
-      return /*#__PURE__*/React.createElement("div", null, "Waiting");
+    const CurrentPage = FicusApp.PAGES[this.state.current_page];
+    let subscribe_floater = null;
+
+    switch (this.state.notifications_state) {
+      case "denied":
+        subscribe_floater = /*#__PURE__*/React.createElement("div", {
+          className: "flooter"
+        }, /*#__PURE__*/React.createElement("span", null, "Please enable notifications for the best experience!"));
+        break;
+
+      case "not_granted":
+      case "not_subscribed":
+        subscribe_floater = /*#__PURE__*/React.createElement("div", {
+          className: "flooter"
+        }, /*#__PURE__*/React.createElement("button", {
+          onClick: () => this.enable_notifications()
+        }, "Enable Notifications"));
+        break;
+
+      case "pending":
+        // TODO: in pending we want to show a spinner or sth on this button, maybe a checkmark after or sth and then done????
+        break;
+
+      case "unconfirmed":
+      case "confirmed":
+        // no need to show anything, subscription is likely active
+        break;
     }
 
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
-      onClick: () => this.subscribe()
-    }, "Subscribe"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => this.test_notif()
-    }, "Test Notif")), /*#__PURE__*/React.createElement(Budgeter, {
-      transactions: this.state.transactions,
-      budgets: this.state.budgets,
-      on_new_budget: () => this.get_budgets()
-    }));
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", {
+      onClick: () => this.changePage("account"),
+      className: this.state.current_page === "account" ? "selected" : ""
+    }, "Account"), /*#__PURE__*/React.createElement("li", {
+      onClick: () => this.changePage("review"),
+      className: this.state.current_page === "review" ? "selected" : ""
+    }, "Review"), /*#__PURE__*/React.createElement("li", {
+      onClick: () => this.changePage("history"),
+      className: this.state.current_page === "history" ? "selected" : ""
+    }, "History"), /*#__PURE__*/React.createElement("li", {
+      onClick: () => this.changePage("overview"),
+      className: this.state.current_page === "overview" ? "selected" : ""
+    }, "Overview"))), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(CurrentPage, null)), subscribe_floater);
   }
 
 }
+
+(async () => {
+  try {
+    const s = await sw();
+    const response = await (await fetch("/_swtest")).json();
+    console.log(`Service worker v${response.version} active`);
+  } catch (error) {
+    console.log("Service worker isn't working:", error);
+  }
+})();
 
 render(() => /*#__PURE__*/React.createElement(FicusApp, null));

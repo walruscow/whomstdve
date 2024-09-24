@@ -1,6 +1,5 @@
 "use strict";
 
-import { AuthWrapper } from "../auth.js";
 import WAPI from "../wapi.js";
 
 class FicusClass {
@@ -71,45 +70,60 @@ class FicusClass {
     console.log(`Got notify_me response ${JSON.stringify(json)}`);
   }
 
+  async list_connected_accounts() {
+    let response = await WAPI().get("ficus/connection/list");
+    let json = await response.json();
+    return json.connections;
+  }
+
+  async add_connection(access_url) {
+    let response = await WAPI().post("ficus/connection/add", {
+      connection: access_url
+    });
+    let json = response.json();
+    return json.ok;
+  }
+
 }
 
 const Ficus = new FicusClass();
 export default Ficus;
-
-let sw_prom = async function () {
-  try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/"
-    });
-
-    if (registration.installing) {
-      console.log("Service worker installing");
-    } else if (registration.waiting) {
-      console.log("Service worker installed");
-    } else if (registration.active) {
-      console.log("Service worker active");
-    }
-
-    return registration;
-  } catch (err) {
-    console.error(`Service worker registration failed with ${err}`);
-    return null;
-  }
-}();
-
 let sw_registration = null;
 export async function sw() {
+  function wait_for_control() {
+    return new Promise(resolve => {
+      if (navigator.serviceWorker.controller) {
+        // Service worker is already controlling the page
+        resolve();
+        return;
+      }
+
+      const on_change = () => {
+        if (navigator.serviceWorker.controller) {
+          resolve();
+          navigator.serviceWorker.removeEventListener("controllerchange", on_change);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener("controllerchange", on_change);
+    });
+  }
+
   if (sw_registration == null) {
-    sw_registration = await sw_prom;
-    console.log(`got ${sw_registration}`);
+    try {
+      sw_registration = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/"
+      });
+      console.debug("Registered service worker");
+      await navigator.serviceWorker.ready;
+      console.debug("Service worker ready");
+      await wait_for_control();
+      console.debug("Service worker is controlling the page");
+    } catch (err) {
+      console.error(`Service worker registration failed with ${err}`);
+      return null;
+    }
   }
 
   return sw_registration;
-}
-export function render(make_app) {
-  const domContainer = document.querySelector("#root");
-  const root = ReactDOM.createRoot(domContainer);
-  root.render( /*#__PURE__*/React.createElement(AuthWrapper, {
-    inner_content: make_app
-  }));
 }

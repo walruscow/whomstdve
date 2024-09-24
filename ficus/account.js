@@ -1,7 +1,7 @@
 "use strict";
 
-import { render } from "./ficus.js";
 import WAPI from "../wapi.js";
+import Ficus from "./ficus.js";
 
 const CopyTextBox = ({
   text
@@ -38,21 +38,53 @@ class Session extends React.Component {
 
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", null, "Session ID: ", id == null ? "null" : id.slice(-8)), is_current_session && /*#__PURE__*/React.createElement("p", {
       class: "green"
-    }, "Current Session"), /*#__PURE__*/React.createElement("p", null, "Issued: ", ds(issued_ts)), /*#__PURE__*/React.createElement("p", null, "Expires: ", is_api_key ? "never" : ds(expires_ts)), /*#__PURE__*/React.createElement("button", {
+    }, "Current Session"), /*#__PURE__*/React.createElement("p", null, "Issued: ", ds(issued_ts)), !is_api_key && /*#__PURE__*/React.createElement("p", null, "Expires: ", ds(expires_ts)), /*#__PURE__*/React.createElement("button", {
       onClick: () => this.props.revoke(id)
     }, is_api_key ? "Revoke" : "Sign Out"));
   }
 
 }
 
-class FicusAccounts extends React.Component {
+const ConnectedAccounts = ({
+  connections
+}) => {
+  if (connections && connections.length > 0) {
+    return /*#__PURE__*/React.createElement("ul", null, connections.map(c => /*#__PURE__*/React.createElement("li", null, c)));
+  } // no accounts, offer to add one
+
+
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "No connected accounts found."), /*#__PURE__*/React.createElement("form", {
+    className: "add-connection",
+    onSubmit: e => {
+      e.preventDefault();
+      Ficus.add_connection(e.target.elements.accessUrl.value);
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    name: "accessUrl",
+    placeholder: "Access URL"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit"
+  }, "Connect Account")));
+};
+
+export default class AccountPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       sessions: null,
-      new_api_key: null
+      current_session: null,
+      new_api_key: null,
+      connected_accounts: null
     };
+    this.get_connected_accounts();
     this.get_sessions();
+  }
+
+  async get_connected_accounts() {
+    this.setState({
+      connected_accounts: await Ficus.list_connected_accounts()
+    });
   }
 
   async get_sessions() {
@@ -83,24 +115,39 @@ class FicusAccounts extends React.Component {
     }));
   }
 
+  async test_notif() {
+    console.debug("Testing notification!");
+    Ficus.test_notif();
+  }
+
   render() {
     if (this.state.sessions == null) {
       return /*#__PURE__*/React.createElement("div", null, "Waiting, maybe a spinner?");
     }
 
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    const api_keys = this.state.sessions.filter(session => session.expires_ts === 0);
+    const app_sessions = this.state.sessions.filter(session => session.expires_ts !== 0);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h1", null, "Connected Accounts"), /*#__PURE__*/React.createElement(ConnectedAccounts, {
+      connections: this.state.connected_accounts
+    })), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h1", null, "API Keys"), /*#__PURE__*/React.createElement("button", {
       onClick: () => this.new_api_key()
     }, "New API Key"), this.state.new_api_key && /*#__PURE__*/React.createElement(CopyTextBox, {
       text: this.state.new_api_key
-    }), /*#__PURE__*/React.createElement("h1", null, "Active Sessions"), /*#__PURE__*/React.createElement("ul", null, this.state.sessions.map(session => /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(Session, {
+    }), /*#__PURE__*/React.createElement("ul", null, api_keys.map(session => /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(Session, {
+      expires_ts: session.expires_ts,
+      issued_ts: session.issued_ts,
+      id: session.session_id,
+      is_current_session: false,
+      revoke: id => this.revoke(id)
+    }))))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h1", null, "Active Sessions"), /*#__PURE__*/React.createElement("ul", null, app_sessions.map(session => /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(Session, {
       expires_ts: session.expires_ts,
       issued_ts: session.issued_ts,
       id: session.session_id,
       is_current_session: session.session_id == this.state.current_session,
       revoke: id => this.revoke(id)
-    })))));
+    }))))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h1", null, "Utilities"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => this.test_notif()
+    }, "Test Notif")));
   }
 
 }
-
-render(() => /*#__PURE__*/React.createElement(FicusAccounts, null));

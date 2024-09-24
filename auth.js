@@ -73,7 +73,7 @@ export class AuthWrapper extends React.Component {
 
       case "unauthenticated":
         return /*#__PURE__*/React.createElement("div", {
-          id: "auth_container"
+          id: "auth-container"
         }, /*#__PURE__*/React.createElement("form", {
           onSubmit: e => {
             e.preventDefault();

@@ -1,0 +1,114 @@
+#ficus-wrapper {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    min-width: 70%;
+}
+
+#ficus {
+    width: 100%;
+    max-width: 100%;
+    @media (min-width: 768px) {
+        max-width: 750px;
+    }
+}
+
+.budget-chooser {
+    list-style: none;
+    padding: unset;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.budget-choice {
+    width: 100%;
+}
+
+.new-budget-form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.budget-frequency * {
+    display: unset;
+}
+
+.transaction {
+    padding-top: 10px;
+}
+
+.flooter {
+    /* center content */
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+    /* left and right makes it full width */
+    left: 0px;
+    right: 0px;
+    /* float at bottom */
+    position: fixed;
+    bottom: 55px;
+    margin-bottom: 10px;
+}
+.flooter > button {
+    width: 75%;
+}
+
+:root {
+    --nav-height: 50px;
+}
+
+main {
+    margin: 8px;
+    padding-bottom: var(--nav-height);
+}
+
+nav {
+    background-color: var(--inner-background);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: var(--nav-height);
+}
+nav > ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+    column-gap: 10px;
+    justify-content: center;
+}
+
+nav > ul > li {
+    padding-bottom: 12px;
+    padding-top: 12px;
+    flex-grow: 3;
+    text-align: center;
+}
+
+nav > ul > li.selected {
+    position: relative;
+}
+
+nav > ul > li.selected::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: white;
+}
+nav > ul > li:first-child {
+    padding-left: 10px;
+}
+nav > ul > li:last-child {
+    padding-right: 10px;
+}
+
+body {
+    margin: 0;
+}

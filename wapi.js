@@ -80,7 +80,7 @@ class WAPIClass {
     }
 
     if (body !== null) {
-      options.body = JSON.stringify(body);
+      options.body = typeof body === "string" ? body : JSON.stringify(body);
     }
 
     return await this._fetch(path, options);
