@@ -2,7 +2,6 @@
 
 import WAPI from "../wapi.js";
 import Ficus from "./ficus.js";
-
 const CopyTextBox = ({
   text
 }) => {
@@ -10,7 +9,6 @@ const CopyTextBox = ({
     await navigator.clipboard.writeText(text);
     console.log("Text copied to clipboard");
   };
-
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
     type: "text",
     value: text,
@@ -19,12 +17,10 @@ const CopyTextBox = ({
     onClick: copyToClipboard
   }, "Copy"));
 };
-
 class Session extends React.Component {
   constructor(props) {
     super(props);
   }
-
   render() {
     const {
       expires_ts,
@@ -33,41 +29,35 @@ class Session extends React.Component {
       is_current_session
     } = this.props;
     const is_api_key = expires_ts === 0;
-
     const ds = ts => new Date(ts * 1000).toISOString().split("T")[0];
-
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", null, "Session ID: ", id == null ? "null" : id.slice(-8)), is_current_session && /*#__PURE__*/React.createElement("p", {
       class: "green"
     }, "Current Session"), /*#__PURE__*/React.createElement("p", null, "Issued: ", ds(issued_ts)), !is_api_key && /*#__PURE__*/React.createElement("p", null, "Expires: ", ds(expires_ts)), /*#__PURE__*/React.createElement("button", {
       onClick: () => this.props.revoke(id)
     }, is_api_key ? "Revoke" : "Sign Out"));
   }
-
 }
-
 const ConnectedAccounts = ({
   connections
 }) => {
   if (connections && connections.length > 0) {
     return /*#__PURE__*/React.createElement("ul", null, connections.map(c => /*#__PURE__*/React.createElement("li", null, c)));
-  } // no accounts, offer to add one
-
-
+  }
+  // no accounts, offer to add one
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "No connected accounts found."), /*#__PURE__*/React.createElement("form", {
     className: "add-connection",
     onSubmit: e => {
       e.preventDefault();
-      Ficus.add_connection(e.target.elements.accessUrl.value);
+      Ficus.add_connection(e.target.elements.setupToken.value);
     }
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
-    name: "accessUrl",
-    placeholder: "Access URL"
+    name: "setupToken",
+    placeholder: "Setup Token"
   }), /*#__PURE__*/React.createElement("button", {
     type: "submit"
   }, "Connect Account")));
 };
-
 export default class AccountPage extends React.Component {
   constructor(props) {
     super(props);
@@ -80,13 +70,11 @@ export default class AccountPage extends React.Component {
     this.get_connected_accounts();
     this.get_sessions();
   }
-
   async get_connected_accounts() {
     this.setState({
       connected_accounts: await Ficus.list_connected_accounts()
     });
   }
-
   async get_sessions() {
     let response = await WAPI().get("account/session/list");
     let json = await response.json();
@@ -95,7 +83,6 @@ export default class AccountPage extends React.Component {
       current_session: WAPI().auth_data.session_id
     });
   }
-
   async new_api_key() {
     let response = await WAPI().post("account/session/new_api_key");
     let json = await response.json();
@@ -104,7 +91,6 @@ export default class AccountPage extends React.Component {
       sessions: [...prevState.sessions, json]
     }));
   }
-
   async revoke(id) {
     let response = await WAPI().post("account/session/revoke", {
       session: id
@@ -114,17 +100,14 @@ export default class AccountPage extends React.Component {
       sessions: prevState.sessions.filter(session => session.session_id !== id)
     }));
   }
-
   async test_notif() {
     console.debug("Testing notification!");
     Ficus.test_notif();
   }
-
   render() {
     if (this.state.sessions == null) {
       return /*#__PURE__*/React.createElement("div", null, "Waiting, maybe a spinner?");
     }
-
     const api_keys = this.state.sessions.filter(session => session.expires_ts === 0);
     const app_sessions = this.state.sessions.filter(session => session.expires_ts !== 0);
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h1", null, "Connected Accounts"), /*#__PURE__*/React.createElement(ConnectedAccounts, {
@@ -149,5 +132,4 @@ export default class AccountPage extends React.Component {
       onClick: () => this.test_notif()
     }, "Test Notif")));
   }
-
 }

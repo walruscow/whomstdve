@@ -1,19 +1,16 @@
 "use strict";
 
 import Ficus, { sw } from "./ficus.js";
-
 function fmt_cents(in_cents) {
   const paddedCents = Math.abs(in_cents).toString().padStart(3, "0");
   const dollars = paddedCents.slice(0, -2);
   const cents = paddedCents.slice(-2);
   return `$${dollars}.${cents}`;
 }
-
 class TxnBudgeter extends React.Component {
   constructor(props) {
     super(props);
   }
-
   render() {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
       className: "orange"
@@ -29,9 +26,7 @@ class TxnBudgeter extends React.Component {
       txn: this.props.transaction
     }))));
   }
-
 }
-
 class NewBudget extends React.Component {
   constructor(props) {
     super(props);
@@ -39,7 +34,6 @@ class NewBudget extends React.Component {
       expanded: false
     };
   }
-
   componentDidUpdate(prevProps) {
     if (prevProps.txn.id != this.props.txn.id) {
       this.setState({
@@ -47,7 +41,6 @@ class NewBudget extends React.Component {
       });
     }
   }
-
   render() {
     if (!this.state.expanded) {
       return /*#__PURE__*/React.createElement("button", {
@@ -57,7 +50,6 @@ class NewBudget extends React.Component {
         })
       }, "New Budget");
     }
-
     return /*#__PURE__*/React.createElement("form", {
       onSubmit: async e => {
         e.preventDefault();
@@ -100,9 +92,7 @@ class NewBudget extends React.Component {
       type: "submit"
     }, "Create Budget"));
   }
-
 }
-
 class Budgeter extends React.Component {
   constructor(props) {
     super(props);
@@ -111,14 +101,12 @@ class Budgeter extends React.Component {
       budgets: props.budgets
     };
   }
-
   render() {
     if (this.state.active_txn_idx >= this.props.transactions.length) {
       return /*#__PURE__*/React.createElement("div", {
         className: "budgeter"
       }, /*#__PURE__*/React.createElement("h1", null, "All done!"));
     }
-
     return /*#__PURE__*/React.createElement("div", {
       className: "budgeter"
     }, /*#__PURE__*/React.createElement(TxnBudgeter, {
@@ -129,11 +117,9 @@ class Budgeter extends React.Component {
         this.setState(prevState => {
           // check if the budget is a new one
           const budgets = [...prevState.budgets];
-
           if (!prevState.budgets.some(b => b.id === budget.id)) {
             budgets.push(budget);
           }
-
           return {
             budgets: budgets,
             active_txn_idx: this.state.active_txn_idx + 1
@@ -143,9 +129,7 @@ class Budgeter extends React.Component {
       }
     }));
   }
-
 }
-
 export default class ReviewPage extends React.Component {
   constructor(props) {
     super(props);
@@ -156,29 +140,24 @@ export default class ReviewPage extends React.Component {
     this.get_transactions();
     this.get_budgets();
   }
-
   async get_transactions() {
     this.setState({
       transactions: await Ficus.get_unbudgeted_transactions()
     });
   }
-
   async get_budgets() {
     this.setState({
       budgets: await Ficus.get_budgets()
     });
   }
-
   render() {
     if (this.state.transactions == null || this.state.budgets == null) {
       return /*#__PURE__*/React.createElement("div", null, "Waiting");
     }
-
     return /*#__PURE__*/React.createElement(Budgeter, {
       transactions: this.state.transactions,
       budgets: this.state.budgets,
       on_new_budget: () => this.get_budgets()
     });
   }
-
 }
