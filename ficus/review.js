@@ -73,10 +73,6 @@ class NewBudget extends React.Component {
     }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
       type: "radio",
       name: "duration",
-      value: "weekly"
-    }), " Weekly"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
-      type: "radio",
-      name: "duration",
       value: "monthly"
     }), " Monthly"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
       type: "radio",
