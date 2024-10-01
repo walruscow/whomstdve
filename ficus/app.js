@@ -25,28 +25,23 @@ class FicusApp extends React.Component {
     super(props);
     this.state = {
       current_page: FicusApp.DEFAULT_PAGE,
-      notifications_state: "unknown"
+      notifications_state: this.initNotifState()
     };
-    this.check_notifications();
   }
-  async check_notifications() {
+  initNotifState() {
     let permission_state = Notification.permission;
     console.debug(`Notification permission: ${permission_state}`);
     switch (permission_state) {
       case "granted":
         // great, check if subscription is active
-        break;
+        return "unconfirmed";
       case "denied":
-        this.setState({
-          notifications_state: "denied"
-        });
-        return;
+        return "denied";
       case "default":
-        this.setState({
-          notifications_state: "not_granted"
-        });
-        return;
+        return "not_granted";
     }
+  }
+  async checkNotifications() {
     const s = await sw();
     let sub = await s.pushManager.getSubscription();
     if (sub == null) {
@@ -57,10 +52,10 @@ class FicusApp extends React.Component {
       this.setState({
         notifications_state: "unconfirmed"
       });
-      this.confirm_notification_subscription(sub);
+      this.confirmNotificationSubscription(sub);
     }
   }
-  async confirm_notification_subscription(sub) {
+  async confirmNotificationSubscription(sub) {
     try {
       // lol this is the easiest way to get what we need
       sub = JSON.parse(JSON.stringify(sub));
@@ -81,12 +76,12 @@ class FicusApp extends React.Component {
       });
     }
   }
-  async enable_notifications() {
+  async enableNotifications() {
     this.setState({
       notifications_state: "pending"
     });
     // kick off network request asap
-    const sub_info = Ficus.get_subscription_meta();
+    const sub_info_req = Ficus.get_subscription_meta();
     let permission = await Notification.requestPermission();
     if (permission !== "granted") {
       this.setState({
@@ -99,12 +94,21 @@ class FicusApp extends React.Component {
     if (sub == null) {
       // no subscription yet
       console.debug("Seeking a new subscription");
-      sub = await s.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: (await sub_info).vapid_key
-      });
+      const sub_info = await sub_info_req;
+      try {
+        sub = await s.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: sub_info.vapid_key
+        });
+      } catch (error) {
+        console.error(`Error subscribing: ${error}`);
+        this.setState({
+          notifications_state: "denied"
+        });
+        return;
+      }
     }
-    await this.confirm_notification_subscription(sub);
+    await this.confirmNotificationSubscription(sub);
   }
   changePage(page) {
     this.setState({
@@ -115,6 +119,7 @@ class FicusApp extends React.Component {
   componentDidMount() {
     window.addEventListener("hashchange", () => this.handleHashChange());
     this.handleHashChange(); // Set initial page based on URL
+    this.checkNotifications();
   }
   componentWillUnmount() {
     window.removeEventListener("hashchange", () => this.handleHashChange());
@@ -147,11 +152,12 @@ class FicusApp extends React.Component {
         subscribe_floater = /*#__PURE__*/React.createElement("div", {
           className: "flooter"
         }, /*#__PURE__*/React.createElement("button", {
-          onClick: () => this.enable_notifications()
+          onClick: () => this.enableNotifications()
         }, "Enable Notifications"));
         break;
       case "pending":
-        // TODO: in pending we want to show a spinner or sth on this button, maybe a checkmark after or sth and then done????
+        // TODO: in pending we want to show a spinner or sth on this button
+        // maybe a checkmark after or sth and then done????
         break;
       case "unconfirmed":
       case "confirmed":
