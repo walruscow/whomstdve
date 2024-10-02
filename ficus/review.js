@@ -11,20 +11,38 @@ class TxnBudgeter extends React.Component {
   constructor(props) {
     super(props);
   }
+  assignBudget(e) {
+    e.preventDefault();
+    const form = Object.fromEntries(new FormData(e.target));
+    const selectedBudget = this.props.budgets.find(budget => budget.id === e.nativeEvent.submitter.value);
+    this.props.onBudgeted(this.props.transaction, selectedBudget, form.always === "on");
+
+    // Uncheck the checkbox after submitting
+    e.target.querySelector('input[name="always"]').checked = false;
+  }
   render() {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
       className: "orange"
     }, fmt_cents(this.props.transaction.cents)), /*#__PURE__*/React.createElement("h1", {
       className: "purple"
-    }, this.props.transaction.description), /*#__PURE__*/React.createElement("ul", {
+    }, this.props.transaction.description), /*#__PURE__*/React.createElement("form", {
+      onSubmit: e => this.assignBudget(e)
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "always-budget-option"
+    }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      name: "always",
+      defaultChecked: false
+    }), "Always budget this way")), /*#__PURE__*/React.createElement("ul", {
       className: "budget-chooser"
     }, this.props.budgets.map(budget => /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-      className: "budget-choice",
-      onClick: () => this.props.on_budgeted(this.props.transaction, budget)
-    }, budget.name))), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(NewBudget, {
-      on_create: budget => this.props.on_budgeted(this.props.transaction, budget),
+      type: "submit",
+      value: budget.id,
+      className: "budget-choice"
+    }, budget.name))))), /*#__PURE__*/React.createElement(NewBudget, {
+      on_create: budget => this.props.onBudgeted(this.props.transaction, budget, /* always = */false),
       txn: this.props.transaction
-    }))));
+    }));
   }
 }
 class NewBudget extends React.Component {
@@ -108,8 +126,8 @@ class Budgeter extends React.Component {
     }, /*#__PURE__*/React.createElement(TxnBudgeter, {
       transaction: this.props.transactions[this.state.active_txn_idx],
       budgets: this.state.budgets,
-      on_budgeted: (txn, budget) => {
-        Ficus.set_txn_budget(txn, budget);
+      onBudgeted: async (txn, budget, always) => {
+        const budgetPromise = Ficus.set_txn_budget(txn, budget, always);
         this.setState(prevState => {
           // check if the budget is a new one
           const budgets = [...prevState.budgets];
@@ -121,7 +139,8 @@ class Budgeter extends React.Component {
             active_txn_idx: this.state.active_txn_idx + 1
           };
         });
-        this.props.on_new_budget(budget);
+        await budgetPromise;
+        this.props.onNewBudget(budget);
       }
     }));
   }
@@ -133,15 +152,15 @@ export default class ReviewPage extends React.Component {
       transactions: null,
       budgets: null
     };
-    this.get_transactions();
-    this.get_budgets();
+    this.getTransactions();
+    this.getBudgets();
   }
-  async get_transactions() {
+  async getTransactions() {
     this.setState({
       transactions: await Ficus.get_unbudgeted_transactions()
     });
   }
-  async get_budgets() {
+  async getBudgets() {
     this.setState({
       budgets: await Ficus.get_budgets()
     });
@@ -153,7 +172,7 @@ export default class ReviewPage extends React.Component {
     return /*#__PURE__*/React.createElement(Budgeter, {
       transactions: this.state.transactions,
       budgets: this.state.budgets,
-      on_new_budget: () => this.get_budgets()
+      onNewBudget: () => this.getBudgets()
     });
   }
 }

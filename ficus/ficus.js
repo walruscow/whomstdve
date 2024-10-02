@@ -4,7 +4,7 @@ import WAPI from "../wapi.js";
 class FicusClass {
   async get_transactions() {
     const end_ts = Math.ceil(Date.now() / 1000);
-    const start_ts = end_ts - 86400 * 7;
+    const start_ts = end_ts - 86400 * 30;
     let response = await WAPI().get("ficus/transactions", {
       start_ts: start_ts,
       end_ts: end_ts
@@ -37,10 +37,11 @@ class FicusClass {
     });
     return await response.json();
   }
-  async set_txn_budget(txn, budget) {
+  async set_txn_budget(txn, budget, always) {
     let response = await WAPI().post("ficus/transactions/budget", {
       txn_id: txn.id,
-      budget_id: budget.id
+      budget_id: budget.id,
+      always: always
     });
     return await response.json();
   }
