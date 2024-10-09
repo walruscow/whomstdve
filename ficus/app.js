@@ -27,8 +27,9 @@ class FicusApp extends React.Component {
       current_page: FicusApp.DEFAULT_PAGE,
       notifications_state: this.initNotifState()
     };
+    this.handleHashChangeListener = () => this.handleHashChange();
   }
-  initNotifState() {
+  initNotifState = () => {
     let permission_state = Notification.permission;
     console.debug(`Notification permission: ${permission_state}`);
     switch (permission_state) {
@@ -40,8 +41,8 @@ class FicusApp extends React.Component {
       case "default":
         return "not_granted";
     }
-  }
-  async checkNotifications() {
+  };
+  checkNotifications = async () => {
     const s = await sw();
     let sub = await s.pushManager.getSubscription();
     if (sub == null) {
@@ -54,8 +55,8 @@ class FicusApp extends React.Component {
       });
       this.confirmNotificationSubscription(sub);
     }
-  }
-  async confirmNotificationSubscription(sub) {
+  };
+  confirmNotificationSubscription = async sub => {
     try {
       // lol this is the easiest way to get what we need
       sub = JSON.parse(JSON.stringify(sub));
@@ -75,8 +76,8 @@ class FicusApp extends React.Component {
         notifications_state: "not_subscribed"
       });
     }
-  }
-  async enableNotifications() {
+  };
+  enableNotifications = async () => {
     this.setState({
       notifications_state: "pending"
     });
@@ -109,36 +110,40 @@ class FicusApp extends React.Component {
       }
     }
     await this.confirmNotificationSubscription(sub);
-  }
-  changePage(page) {
+  };
+  changePage = page => {
     this.setState({
       current_page: page
     });
     window.location.hash = `/${page}`;
-  }
-  componentDidMount() {
-    window.addEventListener("hashchange", () => this.handleHashChange());
+  };
+  componentDidMount = () => {
+    window.addEventListener("hashchange", this.handleHashChange);
     this.handleHashChange(); // Set initial page based on URL
     this.checkNotifications();
-  }
-  componentWillUnmount() {
-    window.removeEventListener("hashchange", () => this.handleHashChange());
-  }
-  handleHashChange() {
-    const hash = window.location.hash.slice(2); // Remove '#/' from the beginning
-    if (FicusApp.PAGES[hash]) {
+  };
+  componentWillUnmount = () => {
+    window.removeEventListener("hashchange", this.handleHashChange);
+  };
+  handleHashChange = () => {
+    const hashes = window.location.hash.slice(2).split("/");
+    const page = hashes[0]; // Get first component after '#/'
+    const sub_nav = hashes.slice(1).join("/"); // Get the rest of the hash
+    if (FicusApp.PAGES[page]) {
       this.setState({
-        current_page: hash
+        current_page: page,
+        sub_nav: sub_nav
       });
     } else {
       // If invalid hash, set to default page
       this.setState({
-        current_page: FicusApp.DEFAULT_PAGE
+        current_page: FicusApp.DEFAULT_PAGE,
+        sub_nav: ""
       });
       window.location.hash = `/${FicusApp.DEFAULT_PAGE}`;
     }
-  }
-  render() {
+  };
+  render = () => {
     const CurrentPage = FicusApp.PAGES[this.state.current_page];
     let subscribe_floater = null;
     switch (this.state.notifications_state) {
@@ -176,8 +181,10 @@ class FicusApp extends React.Component {
     }, "History"), /*#__PURE__*/React.createElement("li", {
       onClick: () => this.changePage("overview"),
       className: this.state.current_page === "overview" ? "selected" : ""
-    }, "Overview"))), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(CurrentPage, null)), subscribe_floater);
-  }
+    }, "Overview"))), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(CurrentPage, {
+      nav: this.state.sub_nav
+    })), subscribe_floater);
+  };
 }
 (async () => {
   try {

@@ -1,17 +1,17 @@
 "use strict";
 
 import Ficus, { sw } from "./ficus.js";
-function fmt_cents(in_cents) {
+const fmt_cents = in_cents => {
   const paddedCents = Math.abs(in_cents).toString().padStart(3, "0");
   const dollars = paddedCents.slice(0, -2);
   const cents = paddedCents.slice(-2);
   return `$${dollars}.${cents}`;
-}
+};
 class TxnBudgeter extends React.Component {
   constructor(props) {
     super(props);
   }
-  assignBudget(e) {
+  assignBudget = e => {
     e.preventDefault();
     const form = Object.fromEntries(new FormData(e.target));
     const selectedBudget = this.props.budgets.find(budget => budget.id === e.nativeEvent.submitter.value);
@@ -19,8 +19,8 @@ class TxnBudgeter extends React.Component {
 
     // Uncheck the checkbox after submitting
     e.target.querySelector('input[name="always"]').checked = false;
-  }
-  render() {
+  };
+  render = () => {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
       className: "orange"
     }, fmt_cents(this.props.transaction.cents)), /*#__PURE__*/React.createElement("h1", {
@@ -40,10 +40,10 @@ class TxnBudgeter extends React.Component {
       value: budget.id,
       className: "budget-choice"
     }, budget.name))))), /*#__PURE__*/React.createElement(NewBudget, {
-      on_create: budget => this.props.onBudgeted(this.props.transaction, budget, /* always = */false),
+      onCreate: budget => this.props.onBudgeted(this.props.transaction, budget, /* always = */false),
       txn: this.props.transaction
     }));
-  }
+  };
 }
 class NewBudget extends React.Component {
   constructor(props) {
@@ -52,14 +52,14 @@ class NewBudget extends React.Component {
       expanded: false
     };
   }
-  componentDidUpdate(prevProps) {
+  componentDidUpdate = prevProps => {
     if (prevProps.txn.id != this.props.txn.id) {
       this.setState({
         expanded: false
       });
     }
-  }
-  render() {
+  };
+  render = () => {
     if (!this.state.expanded) {
       return /*#__PURE__*/React.createElement("button", {
         className: "budget-choice",
@@ -78,7 +78,7 @@ class NewBudget extends React.Component {
           duration: form.duration,
           rollover_policy: form.rollover_policy
         });
-        this.props.on_create(new_budget);
+        this.props.onCreate(new_budget);
       },
       className: "new-budget-form"
     }, /*#__PURE__*/React.createElement("input", {
@@ -105,7 +105,7 @@ class NewBudget extends React.Component {
     }), /*#__PURE__*/React.createElement("button", {
       type: "submit"
     }, "Create Budget"));
-  }
+  };
 }
 class Budgeter extends React.Component {
   constructor(props) {
@@ -115,7 +115,7 @@ class Budgeter extends React.Component {
       budgets: props.budgets
     };
   }
-  render() {
+  render = () => {
     if (this.state.active_txn_idx >= this.props.transactions.length) {
       return /*#__PURE__*/React.createElement("div", {
         className: "budgeter"
@@ -143,36 +143,101 @@ class Budgeter extends React.Component {
         this.props.onNewBudget(budget);
       }
     }));
-  }
+  };
 }
 export default class ReviewPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      transactions: null,
-      budgets: null
+      txn_map: new Map(),
+      budgets: null,
+      current_txn_id: null
     };
-    this.getTransactions();
-    this.getBudgets();
   }
-  async getTransactions() {
-    this.setState({
-      transactions: await Ficus.get_unbudgeted_transactions()
+  getTransactions = async () => {
+    const txns = await Ficus.get_unbudgeted_transactions();
+    this.setState(prev_state => {
+      const txn_map = new Map(prev_state.txn_map.entries());
+      for (const t of txns) {
+        txn_map.set(t.id, t);
+      }
+      const new_state = {
+        txn_map
+      };
+      if (!txn_map.has(prev_state.current_txn_id)) {
+        new_state.current_txn_id = null;
+      }
+      if (!prev_state.current_txn_id && txn_map.size > 0) {
+        new_state.current_txn_id = txns[0].id;
+      }
+      return newState;
     });
-  }
-  async getBudgets() {
+  };
+  getBudgets = async () => {
     this.setState({
       budgets: await Ficus.get_budgets()
     });
-  }
-  render() {
+  };
+  componentDidMount = () => {
+    this.getTransactions();
+    this.getBudgets();
+    window.addEventListener("hashchange", this.handleHashChange);
+    this.handleHashChange(); // Set initial page based on URL
+    this.checkNotifications();
+  };
+  handleHashChange = () => {
+    // /review/{txn}
+    const txn_id = window.location.hash.slice(2).split("/")[1];
+    if (!txn_id || txn_id === "") {
+      this.setState({
+        current_txn_id: null
+      });
+    } else {
+      this.setState({
+        current_txn_id: txn_id
+      });
+    }
+  };
+  componentWillUnmount = () => {
+    window.removeEventListener("hashchange", this.handleHashChange);
+  };
+  render = () => {
     if (this.state.transactions == null || this.state.budgets == null) {
       return /*#__PURE__*/React.createElement("div", null, "Waiting");
+    }
+    if (this.state.current_txn_id >= this.props.transactions.length) {
+      return /*#__PURE__*/React.createElement("div", {
+        className: "budgeter"
+      }, /*#__PURE__*/React.createElement("h1", null, "All done!"));
     }
     return /*#__PURE__*/React.createElement(Budgeter, {
       transactions: this.state.transactions,
       budgets: this.state.budgets,
       onNewBudget: () => this.getBudgets()
     });
-  }
+  };
+  render = () => {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "budgeter"
+    }, /*#__PURE__*/React.createElement(TxnBudgeter, {
+      transaction: this.props.transactions[this.state.active_txn_idx],
+      budgets: this.state.budgets,
+      onBudgeted: async (txn, budget, always) => {
+        const budgetPromise = Ficus.set_txn_budget(txn, budget, always);
+        this.setState(prevState => {
+          // check if the budget is a new one
+          const budgets = [...prevState.budgets];
+          if (!prevState.budgets.some(b => b.id === budget.id)) {
+            budgets.push(budget);
+          }
+          return {
+            budgets: budgets,
+            active_txn_idx: this.state.active_txn_idx + 1
+          };
+        });
+        await budgetPromise;
+        this.props.onNewBudget(budget);
+      }
+    }));
+  };
 }
