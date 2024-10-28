@@ -112,3 +112,22 @@ nav > ul > li:last-child {
 body {
     margin: 0;
 }
+
+.budget-bars {
+    width: 100%;
+    display: flex;
+}
+.budget-bars > div {
+    height: 0.3em;
+    display: inline;
+    flex-grow: 1;
+}
+.budget-bars > .spent {
+    background-color: var(--orange);
+}
+.budget-bars > .target {
+    background-color: var(--green);
+}
+.budget-bars > .rollover {
+    background-color: var(--yellow);
+}

@@ -2,24 +2,27 @@
 
 import WAPI from "../wapi.js";
 class FicusClass {
-  async get_transactions() {
-    const end_ts = Math.ceil(Date.now() / 1000);
-    const start_ts = end_ts - 86400 * 30;
+  get_transactions = async ({
+    end_ts,
+    start_ts
+  } = {}) => {
+    end_ts = end_ts || Math.ceil(Date.now() / 1000);
+    start_ts = start_ts || end_ts - 86400 * 30;
     let response = await WAPI().get("ficus/transactions", {
       start_ts: start_ts,
       end_ts: end_ts
     });
     return await response.json();
-  }
-  async get_budgets() {
+  };
+  get_budgets = async () => {
     let response = await WAPI().get("ficus/budgets");
     return await response.json();
-  }
-  async new_budget({
+  };
+  new_budget = async ({
     name,
     duration,
     target_spend
-  }) {
+  }) => {
     let response = await WAPI().post("ficus/budgets/new", {
       name: name,
       duration: duration,
@@ -27,8 +30,8 @@ class FicusClass {
       rollover_periods: 0
     });
     return await response.json();
-  }
-  async get_unbudgeted_transactions() {
+  };
+  get_unbudgeted_transactions = async () => {
     const end_ts = Math.ceil(Date.now() / 1000);
     const start_ts = end_ts - 86400 * 7;
     let response = await WAPI().get("ficus/transactions/unbudgeted", {
@@ -36,44 +39,44 @@ class FicusClass {
       end_ts: end_ts
     });
     return await response.json();
-  }
-  async set_txn_budget(txn, budget, always) {
+  };
+  set_txn_budget = async (txn, budget, always) => {
     let response = await WAPI().post("ficus/transactions/budget", {
       txn_id: txn.id,
       budget_id: budget.id,
       always: always
     });
     return await response.json();
-  }
-  async get_subscription_meta() {
+  };
+  get_subscription_meta = async () => {
     let response = await WAPI().get("ficus/subscribe/meta");
     let json = await response.json();
     json.vapid_key = new Uint8Array(json.vapid_key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     return json;
-  }
-  async subscribe(sub) {
+  };
+  subscribe = async sub => {
     let response = await WAPI().post("ficus/subscribe", sub);
     let json = await response.json();
     console.log(`Subscribing and got response ${JSON.stringify(json)}`);
     return json.ok;
-  }
-  async test_notif() {
+  };
+  test_notif = async () => {
     let response = await WAPI().post("ficus/notify_me");
     let json = await response.json();
     console.log(`Got notify_me response ${JSON.stringify(json)}`);
-  }
-  async list_connected_accounts() {
+  };
+  list_connected_accounts = async () => {
     let response = await WAPI().get("ficus/connection/list");
     let json = await response.json();
     return json.connections;
-  }
-  async add_connection(setup_token) {
+  };
+  add_connection = async setup_token => {
     let response = await WAPI().post("ficus/connection/add", {
       setup_token: setup_token
     });
     let json = response.json();
     return json.ok;
-  }
+  };
 }
 const Ficus = new FicusClass();
 export default Ficus;

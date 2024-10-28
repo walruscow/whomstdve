@@ -5,7 +5,11 @@ function fmt_cents(in_cents) {
   const paddedCents = Math.abs(in_cents).toString().padStart(3, "0");
   const dollars = paddedCents.slice(0, -2);
   const cents = paddedCents.slice(-2);
-  return `$${dollars}.${cents}`;
+  if (in_cents < 0) {
+    return `$${dollars}.${cents}`;
+  } else {
+    return `+$${dollars}.${cents}`;
+  }
 }
 function fmt_ts(ts) {
   const d = new Date(ts * 1000);
