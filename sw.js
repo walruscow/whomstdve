@@ -43,7 +43,7 @@ self.addEventListener("push", event => {
 });
 self.addEventListener("notificationclick", event => {
   event.notification.close();
-  event.waitUntil(clients.openWindow("/ficus/review"));
+  event.waitUntil(clients.openWindow("/ficus/#/review"));
 });
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
