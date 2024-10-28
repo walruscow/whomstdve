@@ -32,14 +32,18 @@ self.addEventListener("push", event => {
   const dollars = paddedCents.slice(0, -2);
   const cents = paddedCents.slice(-2);
   const options = {
-    body: `$${dollars}.${cents} at ${txn.description}`,
+    body: `$${dollars}.${cents}`,
     icon: "/ficus/icons/192.png",
     badge: "/ficus/icons/192.png",
     data: txn,
     tag: txn.id
   };
-  const title = txn.cents < 0 ? "Money Well Spent 💸" : "Money Received 💰";
+  const title = txn.cents < 0 ? `💸 ${txn.description}` : `💰 ${txn.description}`;
   event.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow("/ficus/review"));
 });
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
