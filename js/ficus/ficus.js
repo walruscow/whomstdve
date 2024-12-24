@@ -100,7 +100,7 @@ export async function sw() {
   }
   if (sw_registration == null) {
     try {
-      sw_registration = await navigator.serviceWorker.register("/sw.js", {
+      sw_registration = await navigator.serviceWorker.register("/js/sw.js", {
         scope: "/"
       });
       console.debug("Registered service worker");

@@ -1,4 +1,4 @@
-const VERSION = 1;
+const VERSION = 2;
 self.addEventListener("install", event => {
   console.log("service worker installing...");
 
@@ -15,7 +15,7 @@ async function cache_assets() {
   // html stuff
   "/stylin.css", "/ficus/icons/192.png", "/ficus/icons/512.png", "/ficus/index.html", "/ficus/stylin.css",
   // js
-  "/auth.js", "/wapi.js",
+  "/js/auth.js", "/js/wapi.js",
   // ficus
   "/ficus/account.js", "/ficus/app.js", "/ficus/ficus.js", "/ficus/history.js", "/ficus/overview.js", "/ficus/review.js"];
   let cache = await caches.open(`static-v${VERSION}`);
@@ -48,7 +48,7 @@ self.addEventListener("notificationclick", event => {
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   console.log(`intercepting request for ${event.request.url}`);
-  if (url.pathname == "/_swtest") {
+  if (url.pathname == "/ficus/_swtest") {
     // A special path to check if the service worker is online
     console.log(`hello from sw version ${VERSION}`);
     event.respondWith(new Response(JSON.stringify({

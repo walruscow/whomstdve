@@ -273,6 +273,51 @@ export function try_move_card(game, card) {
 }
 
 /**
+ * @param {number} game
+ * @param {AutoMove} auto_move
+ * @returns {boolean}
+ */
+export function try_auto_move(game, auto_move) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.try_auto_move(retptr, game, auto_move);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        if (r2) {
+            throw takeObject(r1);
+        }
+        return r0 !== 0;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+ * @param {number} game
+ */
+export function undo(game) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.undo(retptr, game);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        if (r1) {
+            throw takeObject(r0);
+        }
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+ * @enum {0 | 1}
+ */
+export const AutoMove = Object.freeze({
+    Safe: 0, "0": "Safe",
+    All: 1, "1": "All",
+});
+/**
  * @enum {0 | 1 | 2}
  */
 export const Location = Object.freeze({

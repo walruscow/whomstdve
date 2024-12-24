@@ -1,5 +1,6 @@
 .card,
 .empty-card {
+    user-select: none;
     display: inline-block;
     padding: 4px 8px;
     border-radius: 6px;
@@ -7,6 +8,9 @@
     /* this includes padding and border in the total element size. so the element actually becomes 80px
     adding this also makes the aspect ratio work precisely */
     box-sizing: border-box;
+    @media (max-width: 768px) {
+        min-width: 55px;
+    }
 }
 
 .card {
@@ -17,10 +21,16 @@
     border: 1px solid white;
 }
 
-.top-row,
-.cascades {
+.top-row {
     display: flex;
     flex-direction: row;
+}
+.cascades {
+    display: flex;
+    flex-direction: column;
+    @media (min-width: 768px) {
+        flex-direction: row;
+    }
 }
 
 .top-row {
@@ -29,15 +39,47 @@
 
 .card-pile {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    @media (min-width: 768px) {
+        flex-direction: column;
+    }
     margin-left: 2px;
     margin-right: 2px;
     width: 100%;
     overflow: hidden;
 }
 .card-pile > *:not(:first-child) {
-    /* percentage margin-top is strangely based on the element's width, not its
-    height nonetheless, we can get a consistent look due to using aspect-ratio
-    for the element */
-    margin-top: -90%;
+    /* I guess this is based on the width of the nearest containing block.
+    which in this case (mobile) is the whole screen width. so this has to
+    be a very small value */
+    margin-left: -3%;
+    margin-top: 0;
+    @media (min-width: 768px) {
+        /* percentage margin-top is strangely based on some width, not height */
+        margin-top: -90%;
+        margin-left: 0;
+    }
+}
+
+#menu {
+    display: flex;
+}
+#menu > .left,
+#menu > .right {
+    display: flex;
+}
+#menu > .center {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+}
+.menu-icon {
+    line-height: 100%;
+    user-select: none;
+    font-size: 2.5em;
+    padding-top: 0.3em;
+}
+.menu-header {
+    font-size: 2.5em;
 }
