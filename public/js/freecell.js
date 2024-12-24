@@ -69,7 +69,7 @@ class GameBoard extends React.Component {
     }, this.state.boardState.free_cells.map((card, i) => /*#__PURE__*/React.createElement(CardPile, {
       cards: card,
       onCardClick: this.handleCardClick
-    })), this.state.boardState.done_piles.map((card, i) => /*#__PURE__*/React.createElement(CardPile, {
+    })), this.state.boardState.home_piles.map((card, i) => /*#__PURE__*/React.createElement(CardPile, {
       cards: card,
       onCardClick: this.handleCardClick
     }))), /*#__PURE__*/React.createElement("div", {

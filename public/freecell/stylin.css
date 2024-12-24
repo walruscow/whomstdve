@@ -1,0 +1,43 @@
+.card,
+.empty-card {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    aspect-ratio: 5 / 7;
+    /* this includes padding and border in the total element size. so the element actually becomes 80px
+    adding this also makes the aspect ratio work precisely */
+    box-sizing: border-box;
+}
+
+.card {
+    border: 1px solid black;
+    background: white;
+}
+.empty-card {
+    border: 1px solid white;
+}
+
+.top-row,
+.cascades {
+    display: flex;
+    flex-direction: row;
+}
+
+.top-row {
+    margin-bottom: 5px;
+}
+
+.card-pile {
+    display: flex;
+    flex-direction: column;
+    margin-left: 2px;
+    margin-right: 2px;
+    width: 100%;
+    overflow: hidden;
+}
+.card-pile > *:not(:first-child) {
+    /* percentage margin-top is strangely based on the element's width, not its
+    height nonetheless, we can get a consistent look due to using aspect-ratio
+    for the element */
+    margin-top: -90%;
+}
